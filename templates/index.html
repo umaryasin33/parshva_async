@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        display: flex; 
+        justify-content: space-between; 
+    }
+
+    form {
+        width: 45%;
+        float: left;
+        margin-right: 10%; 
+        overflow: hidden;
+    }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: calc(50% - 16px); 
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            display: inline-block;
+        }
+
+        .half-width {
+            width: 100%;
+            display: inline-block;
+            margin-right: 16px; 
+        }
+
+        #description {
+        float: right;
+        width: 45%;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    </style>
+    <script>
+        $(document).ready(function () {
+            var suppliers = {{ suppliers | tojson | safe }};
+            var supplierDropdown = $('#supplier');
+
+            supplierDropdown.append($('<option>', { value: '', text: '*select a supplier*' }));
+
+            suppliers.forEach(function (supplier) {
+                supplierDropdown.append($('<option>', { value: supplier, text: supplier }));
+            });
+
+            supplierDropdown.change(function () {
+                var selectedSupplier = $(this).val();
+
+                $.get('/get_purchase_orders/' + selectedSupplier, function (data) {
+                    
+                    var purchaseOrderDropdown = $('#purchase_order');
+                    purchaseOrderDropdown.empty();
+
+                    purchaseOrderDropdown.append($('<option>', { value: '', text: '*select a PO Number*' }));
+
+                    data.forEach(function (purchaseOrder) {
+                        purchaseOrderDropdown.append($('<option>', { value: purchaseOrder, text: purchaseOrder }));
+                    });
+
+                    $('#description').text('');
+                });
+            });
+
+        $('#purchase_order').change(function () {debugger
+            var selectedOrder = $(this).val();
+            selectedOrder = selectedOrder.replace(/\//g, '');
+            $.get('/get_description/' + selectedOrder, function (data) {
+                data.descriptions.forEach(function(description, index) {
+            $('#description').append($('<p>', { text: 'Item ' + (index + 1) + ': ' + description }));
+        });
+    });
+});
+                });
+
+    </script>
+</head>
+<body>
+    <form>
+        <div class="half-width">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+        </div>
+
+        <div class="half-width">
+            <label for="start_time">Start Time:</label>
+            <input type="time" id="start_time" name="start_time">
+        </div>
+
+        <div class="half-width">
+            <label for="end_time">End Time:</label>
+            <input type="time" id="end_time" name="end_time">
+        </div>
+
+        <div class="half-width">
+            <label for="hours">Number of Hours:</label>
+            <input type="number" id="hours" name="hours" step="0.1">
+        </div>
+
+        <div class="half-width">
+            <label for="rate_per_hour">Rate per Hour:</label>
+            <input type="number" id="rate_per_hour" name="rate_per_hour" step="1" min="0">
+        </div>
+
+        <div class="half-width">
+            <label for="supplier">Supplier:</label>
+            <select id="supplier" name="supplier"></select>
+        </div>
+
+        <div class="half-width">
+            <label for="purchase_order">Purchase Order:</label>
+            <select id="purchase_order" name="purchase_order"></select>
+        </div>
+
+
+    </form>
+    <div id="description">
+        <span id="description"></span>
+    </div>
+</body>
+</html>
